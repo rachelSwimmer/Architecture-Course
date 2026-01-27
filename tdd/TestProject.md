@@ -101,7 +101,7 @@ Unit Tests – בדיקות יחידה
 
 עקרונות עיצוב שעוזרים לבדיקה
 
-        Dependency Injection – לא ליצור תלויות בתוך המחלקה
+   Dependency Injection – לא ליצור תלויות בתוך המחלקה
 
 עבודה מול Interfaces
 
