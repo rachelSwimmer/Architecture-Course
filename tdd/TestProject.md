@@ -137,3 +137,191 @@ Dependency Injection – לא ליצור תלויות בתוך המחלקה
 כותב קוד שעובד
 
 מפתח מקצועי כותב קוד שעובד וגם נבדק
+
+how to use it:
+
+1. Create the Test Project
+
+From the solution folder:
+
+dotnet new xunit -n MyApp.Tests
+dotnet sln add MyApp.Tests
+
+Add reference to the project you want to test:
+
+dotnet add MyApp.Tests reference MyApp.Core
+
+2. Install Required NuGet Packages
+Mandatory
+dotnet add package Microsoft.NET.Test.Sdk
+dotnet add package xunit
+dotnet add package xunit.runner.visualstudio
+
+Mocking
+dotnet add package Moq
+
+Better assertions
+dotnet add package FluentAssertions
+
+(Optional) ASP.NET Core integration tests
+
+dotnet add package Microsoft.AspNetCore.Mvc.Testing
+
+3. Recommended Folder Structure
+4. 
+MyApp.Tests
+ ├── Unit
+ │    ├── Services
+ │    │    └── OrderServiceTests.cs
+ │    └── Helpers
+ ├── Integration
+ │    └── OrdersControllerTests.cs
+ ├── TestBase.cs
+ └── MyApp.Tests.csproj
+
+5. First Unit Test (Simple Example)
+
+Production code (MyApp.Core)
+
+public class Calculator
+{
+    public int Add(int a, int b) => a + b;
+}
+
+Test
+public class CalculatorTests
+{
+    [Fact]
+    public void Add_WhenCalled_ReturnsSum()
+    {
+        // Arrange
+        var calculator = new Calculator();
+
+        // Act
+        var result = calculator.Add(2, 3);
+
+        // Assert
+        result.Should().Be(5);
+    }
+}
+
+Testing a Service with Dependencies (Moq)
+
+Production code
+public interface IUserRepository
+{
+    User GetById(int id);
+}
+
+public class UserService
+{
+    private readonly IUserRepository _repo;
+
+    public UserService(IUserRepository repo)
+    {
+        _repo = repo;
+    }
+
+    public string GetUserName(int id)
+    {
+        return _repo.GetById(id)?.Name;
+    }
+}
+
+Test with Moq
+
+public class UserServiceTests
+{
+    private readonly Mock<IUserRepository> _repoMock;
+    private readonly UserService _service;
+
+    public UserServiceTests()
+    {
+        _repoMock = new Mock<IUserRepository>();
+        _service = new UserService(_repoMock.Object);
+    }
+
+    [Fact]
+    public void GetUserName_UserExists_ReturnsName()
+    {
+        // Arrange
+        _repoMock.Setup(r => r.GetById(1))
+                 .Returns(new User { Name = "Rachel" });
+
+        // Act
+        var name = _service.GetUserName(1);
+
+        // Assert
+        name.Should().Be("Rachel");
+    }
+}
+
+6. Parameterized Tests (Theory)
+   
+[Theory]
+[InlineData(2, 3, 5)]
+[InlineData(0, 0, 0)]
+[InlineData(-1, 1, 0)]
+public void Add_MultipleInputs_ReturnsCorrectSum(
+    int a, int b, int expected)
+{
+    var calc = new Calculator();
+    calc.Add(a, b).Should().Be(expected);
+}
+
+8. Integration Test (Web API)
+API Test
+public class OrdersControllerTests 
+    : IClassFixture<WebApplicationFactory<Program>>
+{
+    private readonly HttpClient _client;
+
+    public OrdersControllerTests(
+        WebApplicationFactory<Program> factory)
+    {
+        _client = factory.CreateClient();
+    }
+
+    [Fact]
+    public async Task GetOrders_Returns200()
+    {
+        var response = await _client.GetAsync("/api/orders");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+}
+
+9. Test Naming Convention (Very Important)
+
+Pattern
+
+MethodName_StateUnderTest_ExpectedBehavior
+
+
+Example:
+
+GetUserName_UserExists_ReturnsName
+
+
+This is industry standard.
+
+9. Common Test Anti-Patterns (Avoid)
+
+❌ Testing private methods
+❌ Using real DB in unit tests
+❌ Too many asserts in one test
+❌ Logic inside tests
+❌ One test testing multiple behaviors
+
+10. Run Tests
+    dotnet test
+With coverage:
+
+dotnet test --collect:"XPlat Code Coverage"
+
+11. Golden Rules (Memorize These)
+
+✔ One test = one behavior
+✔ Unit tests = no IO, no DB, no HTTP
+✔ Integration tests = real pipeline
+✔ Tests must be fast
+✔ Tests must be deterministic
