@@ -329,8 +329,8 @@ how to use it:
 
 12. Golden Rules (Memorize These)
 
-✔ One test = one behavior
-✔ Unit tests = no IO, no DB, no HTTP
-✔ Integration tests = real pipeline
-✔ Tests must be fast
-✔ Tests must be deterministic
+        ✔ One test = one behavior
+        ✔ Unit tests = no IO, no DB, no HTTP
+        ✔ Integration tests = real pipeline
+        ✔ Tests must be fast
+        ✔ Tests must be deterministic
