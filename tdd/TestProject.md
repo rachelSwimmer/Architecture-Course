@@ -159,15 +159,15 @@ how to use it:
         dotnet add package xunit
         dotnet add package xunit.runner.visualstudio
 
-  Mocking
+    Mocking
   
         dotnet add package Moq
 
-  Better assertions
+    Better assertions
   
         dotnet add package FluentAssertions
 
-(Optional) ASP.NET Core integration tests
+    (Optional) ASP.NET Core integration tests
 
         dotnet add package Microsoft.AspNetCore.Mvc.Testing
 
@@ -185,7 +185,7 @@ how to use it:
 
 4. First Unit Test (Simple Example)
 
-  Production code (MyApp.Core)
+    Production code (MyApp.Core)
 
         public class Calculator
         {
@@ -211,7 +211,7 @@ how to use it:
 
 5. Testing a Service with Dependencies (Moq)
 
-  Production code:
+    Production code:
   
                 public interface IUserRepository
                 {
@@ -233,7 +233,7 @@ how to use it:
                     }
                 }
 
-  Test with Moq:
+    Test with Moq:
 
         public class UserServiceTests
         {
