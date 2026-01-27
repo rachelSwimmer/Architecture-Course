@@ -18,24 +18,25 @@ Testing & TDD – מדריך למפתחים
 
 מה זה TDD?
 
-TDD – Test Driven Development
+        TDD – Test Driven Development
 שיטת פיתוח שבה כותבים בדיקה לפני שכותבים את הקוד עצמו.
 
 מחזור העבודה (הבסיס של TDD)
 
-Red – כותבים בדיקה שנכשלת
+        Red – כותבים בדיקה שנכשלת
 
-Green – כותבים קוד מינימלי שגורם לבדיקה לעבור
+        Green – כותבים קוד מינימלי שגורם לבדיקה לעבור
 
-Refactor – משפרים את הקוד בלי לשנות התנהגות
+        Refactor – משפרים את הקוד בלי לשנות התנהגות
 
 חוזרים על המחזור שוב ושוב, בצעדים קטנים.
 
 איך נראית בדיקה טובה?
 מבנה מומלץ: Arrange – Act – Assert
-Arrange – הכנת נתונים ותלויות
-Act     – הרצת הקוד הנבדק
-Assert  – בדיקה שהתוצאה נכונה
+    
+        Arrange – הכנת נתונים ותלויות
+        Act     – הרצת הקוד הנבדק
+        Assert  – בדיקה שהתוצאה נכונה
 
 עקרונות חשובים
 
@@ -47,9 +48,9 @@ Assert  – בדיקה שהתוצאה נכונה
 
 דוגמה לשם טוב:
 
-Should_Return_Error_When_User_Not_Found
+        Should_Return_Error_When_User_Not_Found
 
-Unit Tests – בדיקות יחידה
+        Unit Tests – בדיקות יחידה
 מה זה?
 
 בדיקות של פונקציה / מחלקה אחת, בלי תלות חיצונית.
@@ -70,14 +71,14 @@ Unit Tests – בדיקות יחידה
 
 לא בודקים מימוש פנימי – רק תוצאה
 
-Integration Tests – בדיקות אינטגרציה
+        Integration Tests – בדיקות אינטגרציה
 מה זה?
 
 בדיקות שבודקות חיבור בין רכיבים:
 
-API + DB
+        API + DB
 
-Service + Repository
+        Service + Repository
 
 קוד מול תשתית
 
@@ -90,9 +91,9 @@ Service + Repository
 בודקים רק תרחישים חשובים
 
 פירמידת הבדיקות
-        End to End (מעט מאוד)
-     Integration Tests
-  Unit Tests (הרוב)
+           End to End (מעט מאוד)
+           Integration Tests
+          Unit Tests (הרוב)
 
 
 המטרה:
@@ -100,7 +101,7 @@ Service + Repository
 
 עקרונות עיצוב שעוזרים לבדיקה
 
-Dependency Injection – לא ליצור תלויות בתוך המחלקה
+        Dependency Injection – לא ליצור תלויות בתוך המחלקה
 
 עבודה מול Interfaces
 
