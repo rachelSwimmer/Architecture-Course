@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager - Stay Organized</title>
+    <meta name="description" content="A modern task manager to help you organize and track your daily tasks">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Authentication Scripts -->
+    <script src="utils/storage.js"></script>
+    <script src="components/auth.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="header-main">
+                    <h1 class="app-title">TASK MANAGER</h1>
+                    <p class="app-subtitle">Stay organized, get things done</p>
+                </div>
+                <div class="header-auth" id="headerAuth">
+                    <!-- Authentication info will be inserted here -->
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <section class="task-input-section" aria-label="Add new task">
+                <form id="taskForm" class="task-form">
+                    <label for="taskInput" class="visually-hidden">Enter new task</label>
+                    <input 
+                        type="text" 
+                        id="taskInput" 
+                        class="task-input" 
+                        placeholder="What needs to be done?"
+                        aria-required="true"
+                        required
+                        minlength="2"
+                        maxlength="120"
+                        pattern=".*\S.*"
+                        title="Please enter a task (2–120 characters, not just spaces)."
+                        oninvalid="this.setCustomValidity('Please enter a task (2–120 characters, not just spaces).')"
+                        oninput="this.setCustomValidity('')"
+                    >
+                    <button type="submit" class="btn-add" aria-label="Add task">
+                        ADD TASK
+                    </button>
+                </form>
+            </section>
+
+            <section class="task-filters" aria-label="Filter tasks">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all" aria-pressed="true">
+                        ALL (<span id="countAll">0</span>)
+                    </button>
+                    <button class="filter-btn" data-filter="active" aria-pressed="false">
+                        ACTIVE (<span id="countActive">0</span>)
+                    </button>
+                    <button class="filter-btn" data-filter="completed" aria-pressed="false">
+                        COMPLETED (<span id="countCompleted">0</span>)
+                    </button>
+                </div>
+            </section>
+
+            <section class="tasks-section" aria-label="Task list">
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <h2 class="empty-title">NO TASKS YET</h2>
+                    <p class="empty-message">Add your first task to get started!</p>
+                </div>
+                
+                <ul id="taskList" class="task-list" role="list" aria-live="polite" aria-atomic="false">
+                    <!-- Tasks will be dynamically added here -->
+                </ul>
+            </section>
+
+            <section class="actions-section" aria-label="Bulk actions">
+                <button id="clearCompleted" class="btn-clear" aria-label="Clear all completed tasks">
+                    CLEAR COMPLETED
+                </button>
+                <button id="emailCompleted" class="btn-email" aria-label="Email completed tasks">
+                    EMAIL COMPLETED
+                </button>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>&copy; 2026 Task Manager. Built with ❤️</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+    
+    <!-- Authentication Integration -->
+    <script>
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAuthentication();
+        });
+        
+        /**
+         * Initialize authentication for main app
+         */
+        function initializeAuthentication() {
+            // Check if user is authenticated
+            if (!authManager.isAuthenticated()) {
+                // Redirect to login page
+                window.location.href = 'login.html?error=unauthorized';
+                return;
+            }
+            
+            // Setup authenticated user interface
+            setupAuthenticatedUI();
+        }
+        
+        /**
+         * Setup UI for authenticated user
+         */
+        function setupAuthenticatedUI() {
+            const user = authManager.getCurrentUser();
+            const headerAuth = document.getElementById('headerAuth');
+            
+            if (user && headerAuth) {
+                headerAuth.innerHTML = `
+                    <div class="user-info">
+                        <span class="user-greeting">Welcome, <strong>${escapeHtml(user.username)}</strong></span>
+                        <button id="logoutBtn" class="btn-logout" aria-label="Logout from Task Manager">
+                            LOGOUT
+                        </button>
+                    </div>
+                `;
+                
+                // Add logout functionality
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', handleLogout);
+                }
+            }
+        }
+        
+        /**
+         * Handle user logout
+         */
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                authManager.logout();
+                // Redirect will be handled by authManager.logout()
+            }
+        }
+        
+        /**
+         * Escape HTML to prevent XSS
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

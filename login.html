@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Task Manager</title>
+    <meta name="description" content="Sign in to Task Manager to access your personal task management dashboard">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles/login.css">
+    
+    <!-- Preload critical scripts -->
+    <link rel="preload" href="utils/validation.js" as="script">
+    <link rel="preload" href="utils/storage.js" as="script">
+    <link rel="preload" href="components/auth.js" as="script">
+</head>
+<body class="login-page">
+    <div class="container">
+        <header>
+            <h1 class="app-title">TASK MANAGER</h1>
+            <p class="app-subtitle">Please sign in to continue</p>
+        </header>
+
+        <main>
+            <section class="login-section" aria-label="User authentication">
+                <div class="login-card">
+                    <h2 class="login-title">LOGIN</h2>
+                    
+                    <!-- Login Error Container -->
+                    <div id="loginError" class="login-error" aria-live="assertive" aria-atomic="true" role="alert"></div>
+                    
+                    <!-- Login Form -->
+                    <form id="loginForm" class="login-form" novalidate>
+                        <div class="form-group">
+                            <label for="username" class="form-label">
+                                USERNAME OR EMAIL
+                            </label>
+                            <input 
+                                type="text" 
+                                id="username" 
+                                name="username" 
+                                class="form-input"
+                                placeholder="Enter your username or email"
+                                aria-required="true"
+                                autocomplete="username"
+                                spellcheck="false"
+                                maxlength="50"
+                                autofocus
+                            >
+                            <div id="username-error" class="field-error" role="alert" aria-live="polite"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="form-label">
+                                PASSWORD
+                            </label>
+                            <div class="password-input-wrapper">
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    name="password" 
+                                    class="form-input password-input"
+                                    placeholder="Enter your password"
+                                    aria-required="true"
+                                    autocomplete="current-password"
+                                    maxlength="128"
+                                >
+                                <button 
+                                    type="button" 
+                                    id="passwordToggle" 
+                                    class="password-toggle"
+                                    aria-label="Show password"
+                                    tabindex="0"
+                                >
+                                    SHOW
+                                </button>
+                            </div>
+                            <div id="password-error" class="field-error" role="alert" aria-live="polite"></div>
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            id="submitButton" 
+                            class="btn-login"
+                            aria-describedby="login-help"
+                        >
+                            LOGIN
+                        </button>
+
+                        <!-- Loading Spinner -->
+                        <div id="loadingSpinner" class="loading-spinner" style="display: none;" aria-hidden="true">
+                            <div class="spinner"></div>
+                            <span class="loading-text">Authenticating...</span>
+                        </div>
+                    </form>
+
+                    <!-- Help Text -->
+                    <div id="login-help" class="login-help">
+                        <p>Use the demo credentials below or try the following keyboard shortcuts:</p>
+                        <ul>
+                            <li><kbd>Ctrl</kbd> + <kbd>K</kbd> to focus username field</li>
+                            <li><kbd>Enter</kbd> to submit form</li>
+                            <li><kbd>Esc</kbd> to clear errors</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Demo Credentials Section -->
+            <section class="demo-section" aria-label="Demo accounts">
+                <div class="demo-card">
+                    <h3 class="demo-title">DEMO ACCOUNTS</h3>
+                    <p class="demo-subtitle">Try the application with these test credentials:</p>
+                    
+                    <div id="demoCredentials" class="demo-credentials">
+                        <button 
+                            type="button" 
+                            class="btn-demo" 
+                            data-demo-user="admin"
+                            aria-label="Load admin demo credentials"
+                        >
+                            <span class="demo-label">ADMIN ACCOUNT</span>
+                            <small class="demo-details">Username: admin<br>Password: password123</small>
+                        </button>
+                        
+                        <button 
+                            type="button" 
+                            class="btn-demo" 
+                            data-demo-user="user"
+                            aria-label="Load user demo credentials"
+                        >
+                            <span class="demo-label">USER ACCOUNT</span>
+                            <small class="demo-details">Username: user<br>Password: user123</small>
+                        </button>
+                    </div>
+                    
+                    <p class="demo-note">
+                        <strong>Note:</strong> This is a demo application. No real authentication is performed.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Security Information -->
+            <section class="security-section" aria-label="Security information">
+                <div class="security-card">
+                    <h3 class="security-title">🔒 SECURITY</h3>
+                    <ul class="security-list">
+                        <li>Your session will expire after 24 hours of inactivity</li>
+                        <li>This demo uses mock authentication for demonstration purposes</li>
+                        <li>In production, all data would be encrypted and transmitted securely</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>&copy; 2026 Task Manager. Built with ❤️</p>
+            <nav class="footer-nav" aria-label="Footer navigation">
+                <a href="index.html" class="footer-link">Back to App</a>
+            </nav>
+        </footer>
+    </div>
+
+    <!-- Skip Link for Screen Readers -->
+    <a href="#loginForm" class="skip-link">Skip to login form</a>
+
+    <!-- Scripts -->
+    <script src="utils/validation.js"></script>
+    <script src="utils/storage.js"></script>
+    <script src="components/auth.js"></script>
+    <script src="components/login-form.js"></script>
+
+    <!-- Login Page Initialization -->
+    <script>
+        // Initialize login page when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if already authenticated
+            if (window.authManager && authManager.isAuthenticated()) {
+                authManager.redirectToApp();
+                return;
+            }
+
+            // Initialize login form if not already done
+            if (!window.loginForm) {
+                window.loginForm = new LoginForm('#loginForm');
+            }
+
+            // Add page-specific enhancements
+            initializeLoginPageEnhancements();
+        });
+
+        /**
+         * Initialize additional login page enhancements
+         */
+        function initializeLoginPageEnhancements() {
+            // Add smooth focus transitions
+            const inputs = document.querySelectorAll('.form-input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentNode.classList.add('focused');
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentNode.classList.remove('focused');
+                });
+            });
+
+            // Add ripple effect to buttons (optional enhancement)
+            const buttons = document.querySelectorAll('.btn-login, .btn-demo');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const ripple = document.createElement('span');
+                    ripple.className = 'ripple';
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+
+            // Preload main app for faster transition
+            const link = document.createElement('link');
+            link.rel = 'prefetch';
+            link.href = 'index.html';
+            document.head.appendChild(link);
+
+            // Check for URL parameters (e.g., ?error=session_expired)
+            checkUrlParameters();
+        }
+
+        /**
+         * Check for URL parameters and show appropriate messages
+         */
+        function checkUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            const message = urlParams.get('message');
+
+            if (error === 'session_expired') {
+                showTemporaryMessage('Your session has expired. Please sign in again.', 'warning');
+            } else if (error === 'unauthorized') {
+                showTemporaryMessage('You must be signed in to access that page.', 'warning');
+            } else if (message) {
+                showTemporaryMessage(decodeURIComponent(message), 'info');
+            }
+        }
+
+        /**
+         * Show temporary message to user
+         * @param {string} text - Message text
+         * @param {string} type - Message type (warning, info, error)
+         */
+        function showTemporaryMessage(text, type = 'info') {
+            const messageElement = document.getElementById('loginError');
+            if (messageElement) {
+                messageElement.textContent = text;
+                messageElement.className = `login-error ${type} visible`;
+                messageElement.setAttribute('role', 'alert');
+
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    messageElement.classList.remove('visible');
+                }, 5000);
+            }
+        }
+
+        // Handle back navigation from main app
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted && window.authManager) {
+                // Page was loaded from cache, check auth status
+                if (authManager.isAuthenticated()) {
+                    authManager.redirectToApp();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
