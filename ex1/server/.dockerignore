@@ -1,0 +1,7 @@
+**/.vs
+**/bin
+**/obj
+**/Logs
+**/*.user
+**/*.sln.docstats
+**/node_modules
