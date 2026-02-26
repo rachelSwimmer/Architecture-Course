@@ -1,0 +1,147 @@
+﻿using Microsoft.EntityFrameworkCore;
+using server.Data;
+using server.Interfaces;
+using server.Models;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+
+namespace server.Repositories
+{
+    public class PurchaseRepository:IPurchaseRepository
+    {
+        private readonly ApplicationDbContext _context;
+        public PurchaseRepository(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<Purchase> AddPurchase(Purchase purchase)
+        {
+            _context.Purchases.Add(purchase);
+            await _context.SaveChangesAsync();
+            return purchase;
+        }
+
+        public async Task<bool> DeletePurchase(int id)
+        {
+            var purchase = await _context.Purchases.FindAsync(id);
+            if (purchase == null) return false;
+            _context.Purchases.Remove(purchase);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<IEnumerable<Purchase>> GetAll()
+        {
+            return await _context.Purchases
+                .Include(b => b.Buyer)
+                .ToListAsync();
+        }
+
+        public async Task<Purchase> GetById(int id)
+        {
+            return await _context.Purchases
+                .Include(b => b.Buyer)
+                .Include(p => p.Tickets)
+                    .ThenInclude(g => g.Gift)
+                .Include(p => p.PurchasePackages)
+                    .ThenInclude(x => x.Package)
+                .OrderByDescending(p => p.Id) 
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
+        public async Task<Purchase> GetByUserId(string userId)
+        {
+            return await _context.Purchases
+                .Include(b => b.Buyer)
+                .Include(p => p.Tickets)
+                    .ThenInclude(g => g.Gift)
+                .Include(p => p.PurchasePackages)
+                    .ThenInclude(x => x.Package)
+                .OrderByDescending(p => p.Id) 
+                .FirstOrDefaultAsync(p => p.BuyerId == userId);
+        }
+        public async Task<Purchase> UpdatePurchase(Purchase purchase)
+        {
+            _context.Purchases.Update(purchase);
+            await _context.SaveChangesAsync();
+            return purchase;
+        }
+
+        public async Task<Purchase> AddTicketToPurchase( Ticket ticket)
+        {
+            var purchase = await GetById(ticket.PurchaseId);
+            if (purchase == null) return null;
+            var exist = purchase.Tickets.FirstOrDefault(t => t.GiftId == ticket.GiftId);
+            if (exist != null)
+            {
+                exist.Quantity += ticket.Quantity;
+            }
+            else {
+                purchase.Tickets.Add(ticket);
+                    };  
+            
+            await _context.SaveChangesAsync();
+            return purchase;
+
+        }
+
+        public async Task<Purchase> DeleteTicketFromPurchase(int purchaseId, int ticketId)
+        {
+            var purchase = await GetById(purchaseId);
+            if (purchase == null) return null;
+
+            var existing = purchase.Tickets.FirstOrDefault(t => t.Id == ticketId);
+            if (existing == null) return purchase;
+            purchase.Tickets.Remove(existing);
+            await _context.SaveChangesAsync();
+            return purchase;
+        }
+
+        public async Task<Purchase> AddPackageToPurchase(int purchaseId, int packageId)
+        {
+            var purchase = await GetById(purchaseId);
+            if (purchase == null) return null;
+            var existPackage = purchase.PurchasePackages.FirstOrDefault(p => p.PackageId ==packageId);
+            if (existPackage != null)
+            {
+                existPackage.Quantity++;
+            }
+            else {
+               
+                var newPurchasepackage = new PurchasePackage
+                {
+                    PurchaseId = purchaseId,
+                    PackageId = packageId,
+                    Quantity = 1
+                };
+                purchase.PurchasePackages.Add(newPurchasepackage);
+            }
+           
+            await _context.SaveChangesAsync();
+            return purchase;
+        }
+
+        public async Task<Purchase> DeletePackageFromPurchase(int purchaseId, int packageId)
+        {
+            var purchase = await GetById(purchaseId);
+            if (purchase == null) return null;
+
+            var existing = purchase.PurchasePackages.FirstOrDefault(p => p.PackageId == packageId);
+            
+            if (existing != null && existing.Quantity>0 )
+            {
+                existing.Quantity--;
+                if (existing.Quantity <= 0)
+                    purchase.PurchasePackages.Remove(existing);
+            }
+            else
+            {
+                purchase.PurchasePackages.Remove(existing);
+            }
+            await _context.SaveChangesAsync();
+            return purchase;
+        }
+
+       
+
+    }
+}
