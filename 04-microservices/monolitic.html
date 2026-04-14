@@ -1,1 +1,784 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Monolith Pain — Classroom Demo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Space+Grotesk:wght@400;600;700;800&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  background: #0d0d0d; color: #fff;
+  height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* ── STEP BAR ── */
+#steps-bar {
+  display: flex; align-items: center;
+  background: #141414; border-bottom: 2px solid #1e1e1e;
+  padding: 0 20px; flex: 0 0 56px; overflow: hidden;
+}
+.step-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 16px; height: 56px; font-size: 12px; font-weight: 700;
+  color: #3a3a3a; border-right: 1px solid #1e1e1e;
+  white-space: nowrap; letter-spacing: .02em;
+}
+.step-item .snum {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #1e1e1e; color: #444; font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+}
+.step-item.active { color: #e8e8e8; background: #181818; }
+.step-item.active .snum { background: #1d9e75; color: #fff; }
+.step-item.done .snum { background: #252525; color: #444; }
+#next-btn {
+  margin-left: auto; padding: 9px 22px; border-radius: 7px;
+  border: 2px solid #1d9e75; background: #1d9e75; color: #fff;
+  font-size: 13px; font-weight: 800; cursor: pointer; font-family: inherit;
+  white-space: nowrap; flex-shrink: 0; letter-spacing: .03em;
+  transition: background .15s, transform .1s;
+}
+#next-btn:hover  { background: #178a63; transform: scale(1.02); }
+#next-btn:disabled { background: #222; border-color: #222; color: #444; cursor: default; transform: none; }
+#reset-btn {
+  margin-left: 10px; padding: 9px 16px; border-radius: 7px;
+  border: 1.5px solid #272727; background: transparent; color: #555;
+  font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: color .15s, border-color .15s;
+}
+#reset-btn:hover { color: #999; border-color: #444; }
+
+/* ── MAIN ── */
+#main { flex: 1; display: flex; overflow: hidden; }
+
+/* ── LEFT ── */
+#checkout-side {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px; padding: 24px;
+  border-right: 2px solid #1a1a1a;
+  transition: background .5s; background: #111; position: relative;
+}
+
+/* failure overlay */
+#fail-overlay {
+  display: none; position: absolute; inset: 0; z-index: 20;
+  background: linear-gradient(135deg,#600 0%,#300 100%);
+  flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+}
+#fail-overlay.show { display: flex; animation: fadeIn .35s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+#fail-title { font-size: 52px; font-weight: 900; letter-spacing: -.02em; }
+#fail-sub   { font-size: 14px; color: rgba(255,255,255,.5); font-family: 'JetBrains Mono', monospace; }
+#fail-explain {
+  background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px; padding: 14px 22px; font-size: 13px;
+  color: rgba(255,255,255,.7); text-align: center; max-width: 420px; line-height: 1.7;
+}
+#fail-explain strong { color: #ff8888; }
+
+/* cart */
+#cart { background: #181818; border-radius: 12px; border: 1px solid #242424; width: 380px; overflow: hidden; }
+.crow { display: flex; justify-content: space-between; padding: 12px 18px; font-size: 14px; border-bottom: 1px solid #202020; color: #aaa; }
+.crow.total { font-size: 16px; font-weight: 800; color: #fff; background: #1e1e1e; border: none; }
+
+/* pay button */
+#pay-btn {
+  width: 380px; padding: 20px; border: none; border-radius: 10px;
+  font-size: 22px; font-weight: 900; cursor: pointer; font-family: inherit;
+  transition: background .3s, color .3s; letter-spacing: -.01em;
+}
+#pay-btn.ready   { background: #1d9e75; color: #fff; }
+#pay-btn.waiting { background: #6a4400; color: #ffcc66; cursor: default; }
+#pay-btn.failed  { background: #6a0000; color: #ff8888; cursor: default; animation: shake .4s; }
+#pay-btn.success { background: #0a5c38; color: #66ffaa; cursor: default; }
+@keyframes shake {
+  0%,100%{transform:translateX(0)} 20%{transform:translateX(-10px)}
+  40%{transform:translateX(10px)} 60%{transform:translateX(-7px)} 80%{transform:translateX(7px)}
+}
+#pay-status {
+  font-size: 13px; font-weight: 700; height: 22px; width: 380px;
+  text-align: center; font-family: 'JetBrains Mono', monospace;
+}
+#pay-status.ok   { color: #1d9e75; }
+#pay-status.wait { color: #e09000; }
+#pay-status.err  { color: #e03030; }
+
+/* timer */
+#timer-wrap { width: 380px; opacity: 0; transition: opacity .3s; display: flex; flex-direction: column; gap: 6px; }
+#timer-wrap.show { opacity: 1; }
+#timer-track { height: 16px; background: #1c1c1c; border-radius: 8px; overflow: hidden; border: 1px solid #282828; }
+#timer-fill  { height: 100%; width: 100%; border-radius: 8px; }
+#timer-hdr   { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; }
+#timer-lbl   { color: #555; letter-spacing: .06em; }
+#timer-secs  { font-size: 15px; font-weight: 900; }
+#timer-secs.g { color: #1d9e75; }
+#timer-secs.o { color: #e09000; }
+#timer-secs.r { color: #e03030; animation: blink .5s infinite alternate; }
+@keyframes blink { from{opacity:1} to{opacity:.3} }
+
+/* queue banner */
+#queue-banner {
+  display: none; width: 380px;
+  background: #1a0800; border: 2px solid #8a3a00; border-radius: 10px;
+  padding: 11px 16px; align-items: center; gap: 14px;
+}
+#queue-banner.show { display: flex; animation: slideUp .3s ease; }
+@keyframes slideUp { from{transform:translateY(8px);opacity:0} to{transform:translateY(0);opacity:1} }
+#qb-icon  { font-size: 26px; }
+#qb-body  { flex: 1; }
+#qb-title { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: #7a4000; text-transform: uppercase; margin-bottom: 3px; }
+#qb-desc  { font-size: 12px; color: #bb7733; }
+#qb-num   { font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 900; color: #ff7722; }
+
+/* stats — pure CSS, no inline styles */
+#stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 380px; }
+.sc {
+  background: #181818; border: 2px solid #252525;
+  border-radius: 10px; padding: 12px 14px; text-align: center;
+  transition: background .5s, border-color .5s;
+}
+.sc.lit-green { border-color: #1d9e75; background: #001a0e; }
+.sc.lit-red   { border-color: #e03030; background: #1a0000; }
+.sc-lbl { font-size: 10px; color: #444; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+.sc-val {
+  font-size: 40px; font-weight: 900; color: #2a2a2a;
+  line-height: 1; font-family: 'JetBrains Mono', monospace;
+  display: inline-block; transition: color .4s;
+}
+.sc-val.g { color: #1d9e75; }
+.sc-val.r { color: #e03030; }
+@keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.3)} 100%{transform:scale(1)} }
+.sc-val.pop { animation: pop .4s ease-out forwards; }
+
+/* ── RIGHT ── */
+#right-side {
+  flex: 0 0 330px; display: flex; flex-direction: column;
+  padding: 18px; gap: 14px; background: #0f0f0f;
+}
+#thread-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10px; font-weight: 800; letter-spacing: .1em;
+  color: #3a3a3a; text-transform: uppercase; margin-bottom: 10px;
+}
+#busy-badge {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 800;
+  color: #444; background: #181818; border-radius: 4px; padding: 2px 8px;
+  transition: color .3s, background .3s;
+}
+#busy-badge.full { color: #e03030; background: #2a0000; animation: blink .7s infinite alternate; }
+
+/* thread tiles */
+#thread-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.th {
+  height: 68px; border-radius: 9px; border: 1.5px solid #1e1e1e;
+  background: #131313; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px; transition: all .3s;
+}
+.th .icon { font-size: 15px; line-height: 1; }
+.th .lbl  { font-size: 9px; font-family: 'JetBrains Mono', monospace; color: #2a2a2a; }
+.th .bar  { width: 42px; height: 3px; background: #222; border-radius: 2px; margin-top: 3px; overflow: hidden; }
+.th .barfill { height: 100%; border-radius: 2px; background: #e05020; }
+
+/* idle */
+.th.idle .icon { font-size: 11px; color: #2a2a2a; font-family: 'JetBrains Mono', monospace; }
+
+/* image resize */
+.th.img  { background: #1e0800; border-color: #8a3500; }
+.th.img .lbl { color: #993311; font-weight: 700; }
+
+/* checkout running */
+.th.chk  { background: #001a0e; border-color: #1d9e75; }
+.th.chk .lbl { color: #1d9e75; font-weight: 700; }
+@keyframes glowG { from{box-shadow:0 0 4px #1d9e7544} to{box-shadow:0 0 14px #1d9e75aa} }
+.th.chk  { animation: glowG 1.2s infinite alternate; }
+
+/* checkout queued / waiting */
+.th.wait { background: #1a0000; border-color: #cc2200; }
+.th.wait .lbl { color: #882200; font-weight: 700; }
+@keyframes glowR { from{box-shadow:0 0 4px #cc220044} to{box-shadow:0 0 16px #cc2200bb} }
+.th.wait { animation: glowR .8s infinite alternate; }
+
+/* annotation */
+#annotation {
+  display: none; margin-top: 8px;
+  background: #1a0500; border: 1.5px solid #6a2500;
+  border-radius: 8px; padding: 10px 12px;
+  font-size: 12px; color: #cc7744; line-height: 1.6;
+}
+#annotation.show { display: block; }
+#annotation strong { color: #ff8844; }
+
+/* narration */
+#narration {
+  background: #141414; border: 1.5px solid #1e1e1e;
+  border-radius: 10px; padding: 14px 16px; flex: 1; overflow-y: auto;
+}
+#nar-step { font-size: 10px; font-weight: 800; letter-spacing: .1em; color: #444; text-transform: uppercase; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
+#nar-text { font-size: 13px; color: #aaa; line-height: 1.75; }
+#nar-text strong { color: #fff; }
+</style>
+</head>
+<body>
+
+<div id="steps-bar">
+  <div class="step-item active" id="s0"><span class="snum">1</span>Normal checkout</div>
+  <div class="step-item"        id="s1"><span class="snum">2</span>Uploads arrive</div>
+  <div class="step-item"        id="s2"><span class="snum">3</span>Threads fill up</div>
+  <div class="step-item"        id="s3"><span class="snum">4</span>Checkout dies</div>
+  <div class="step-item"        id="s4"><span class="snum">5</span>Why?</div>
+  <button id="next-btn"  onclick="nextStep()">Next step →</button>
+  <button id="reset-btn" onclick="doReset()">↺ Reset</button>
+</div>
+
+<div id="main">
+
+  <!-- LEFT: checkout UI -->
+  <div id="checkout-side">
+
+    <div id="fail-overlay">
+      <div id="fail-title">PAYMENT FAILED</div>
+      <div id="fail-sub">error: upstream timeout after 10 000 ms</div>
+      <div id="fail-explain">
+        The checkout code is <strong>perfectly fine</strong>.<br>
+        All 8 threads were locked by image resize — it <strong>never got one</strong>.<br>
+        After 10 seconds the server killed the waiting request.
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:800;letter-spacing:.1em;color:#333;text-transform:uppercase;font-family:'JetBrains Mono',monospace">
+      ShopFast — Checkout
+    </div>
+
+    <div id="cart">
+      <div class="crow"><span>Blue T-Shirt</span><span>$29.00</span></div>
+      <div class="crow"><span>Running Shoes</span><span>$89.00</span></div>
+      <div class="crow"><span>Water Bottle</span><span>$18.00</span></div>
+      <div class="crow total"><span>Total</span><span>$136.00</span></div>
+    </div>
+
+    <button id="pay-btn" class="ready">Pay $136.00</button>
+    <div id="pay-status"></div>
+
+    <!-- timeout countdown bar -->
+    <div id="timer-wrap">
+      <div id="timer-hdr">
+        <span id="timer-lbl">REQUEST TIMEOUT COUNTDOWN</span>
+        <span id="timer-secs" class="g">10.0s</span>
+      </div>
+      <div id="timer-track"><div id="timer-fill"></div></div>
+    </div>
+
+    <!-- queue banner (step 4) -->
+    <div id="queue-banner">
+      <div id="qb-icon">⏳</div>
+      <div id="qb-body">
+        <div id="qb-title">Checkout waiting in queue</div>
+        <div id="qb-desc">No thread available — all 8 are busy</div>
+      </div>
+      <div id="qb-num">Q:1</div>
+    </div>
+
+    <!-- stat boxes -->
+    <div id="stats-row">
+      <div id="sc-t" class="sc">
+        <div class="sc-lbl">Last checkout</div>
+        <div id="sv-t" class="sc-val">—</div>
+      </div>
+      <div id="sc-to" class="sc">
+        <div class="sc-lbl">Timeouts</div>
+        <div id="sv-to" class="sc-val">0</div>
+      </div>
+    </div>
+
+  </div><!-- /checkout-side -->
+
+  <!-- RIGHT: thread grid + narration -->
+  <div id="right-side">
+    <div>
+      <div id="thread-hdr">
+        <span>Server — 8 shared threads</span>
+        <span id="busy-badge">0/8 busy</span>
+      </div>
+      <div id="thread-grid"></div>
+      <div id="annotation">
+        <strong>All 8 threads locked</strong> by image resize.<br>
+        The checkout request has <strong>no thread to run on</strong> — it waits in queue until the timeout kills it.
+      </div>
+    </div>
+    <div id="narration">
+      <div id="nar-step">Step 1 of 5</div>
+      <div id="nar-text">Click <strong>Next step</strong> to begin.</div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+/* ===================================================
+   CONFIG
+=================================================== */
+var N              = 8;
+var IMG_MS         = 12000;   // image job duration
+var CHK_MS         = 500;     // checkout job duration (fast, visible)
+var TO_MS          = 10000;   // timeout threshold
+var FLOOD_INTERVAL = 700;     // ms between flood dispatches
+
+/* ===================================================
+   STATE
+=================================================== */
+var threads     = Array(N).fill(null);   // null | {type, startMs, durMs}
+var waitQ       = [];                    // pending jobs
+var timeouts    = 0;
+var floodTimer  = null;
+var timerRaf    = null;
+var progRaf     = null;
+var currentStep = 0;
+var chkBusy     = false;
+var step4Locked = false;   // when true, dispatch always queues (never assigns)
+
+/* ===================================================
+   NARRATION
+=================================================== */
+function setNarration(step, html){
+  document.getElementById('nar-step').textContent = step;
+  document.getElementById('nar-text').innerHTML   = html;
+}
+
+/* ===================================================
+   STAT BOXES  — the only place these are ever touched
+=================================================== */
+function setStatCheckout(ms){
+  var val  = document.getElementById('sv-t');
+  var card = document.getElementById('sc-t');
+  val.textContent = ms + 'ms';
+  // force re-trigger pop animation
+  val.className = 'sc-val g';
+  void val.offsetWidth;               // reflow trick
+  val.className = 'sc-val g pop';
+  card.className = 'sc lit-green';
+}
+
+function setStatTimeout(){
+  var val  = document.getElementById('sv-to');
+  var card = document.getElementById('sc-to');
+  val.textContent = timeouts;
+  val.className = 'sc-val r';
+  void val.offsetWidth;
+  val.className = 'sc-val r pop';
+  card.className = 'sc lit-red';
+}
+
+/* ===================================================
+   THREAD GRID
+=================================================== */
+function renderThreads(){
+  var g    = document.getElementById('thread-grid');
+  var busy = 0;
+
+  // build tiles
+  var tiles = [];
+  for(var i=0;i<N;i++){
+    var t = threads[i];
+    if(t) busy++;
+    var pct = 100;
+    if(t && t.type==='img'){
+      pct = Math.max(0, 1 - (Date.now()-t.startMs)/t.durMs) * 100;
+    }
+    var cls, inner;
+    if(!t){
+      cls   = 'th idle';
+      inner = '<span class="icon" style="font-size:10px;color:#2a2a2a;font-family:\'JetBrains Mono\',monospace">T'+(i+1)+'</span>'+
+              '<span class="lbl">idle</span>';
+    } else if(t.type==='img'){
+      cls   = 'th img';
+      inner = '<span class="icon">🖼</span><span class="lbl">resizing</span>'+
+              '<div class="bar"><div class="barfill" style="width:'+Math.round(pct)+'%"></div></div>';
+    } else {
+      cls   = 'th chk';
+      inner = '<span class="icon">💳</span><span class="lbl">checkout</span>';
+    }
+    tiles.push({ cls:cls, inner:inner, isIdle: !t });
+  }
+
+  // if checkout is queued, replace last idle tile with waiting marker
+  var hasWaiting = waitQ.some(function(j){ return j.type==='chk'; });
+  if(hasWaiting){
+    for(var k=tiles.length-1; k>=0; k--){
+      if(tiles[k].isIdle){
+        tiles[k].cls   = 'th wait';
+        tiles[k].inner = '<span class="icon">⏳</span><span class="lbl">WAITING</span>';
+        break;
+      }
+    }
+    document.getElementById('queue-banner').classList.add('show');
+    document.getElementById('qb-num').textContent = 'Q:' + waitQ.filter(function(j){return j.type==='chk';}).length;
+  } else {
+    document.getElementById('queue-banner').classList.remove('show');
+  }
+
+  // rebuild DOM only if changed (avoid flicker)
+  var newHTML = tiles.map(function(t){ return '<div class="'+t.cls+'">'+t.inner+'</div>'; }).join('');
+  if(g.innerHTML !== newHTML) g.innerHTML = newHTML;
+
+  // busy badge
+  var bb = document.getElementById('busy-badge');
+  bb.textContent = busy + '/' + N + ' busy';
+  bb.className   = busy===N ? 'full' : '';
+
+  startProgLoop();
+}
+
+function startProgLoop(){
+  if(progRaf) return;
+  var hasImg = threads.some(function(t){ return t && t.type==='img'; });
+  if(!hasImg) return;
+  (function loop(){
+    updateBars();
+    if(threads.some(function(t){ return t && t.type==='img'; }))
+      progRaf = requestAnimationFrame(loop);
+    else
+      progRaf = null;
+  })();
+}
+
+function updateBars(){
+  var cells = document.getElementById('thread-grid').children;
+  var ci = 0;   // cell index tracks actual DOM position
+  for(var i=0;i<N;i++){
+    var t = threads[i];
+    if(t && t.type==='img'){
+      var pct = Math.max(0, 1-(Date.now()-t.startMs)/t.durMs)*100;
+      // find the barfill in this cell (ci matches i only when no waiting-tile swap yet — use data attr)
+      var cell = cells[i];
+      if(cell){
+        var bf = cell.querySelector('.barfill');
+        if(bf) bf.style.width = Math.round(pct) + '%';
+      }
+    }
+  }
+}
+
+/* ===================================================
+   THREAD ENGINE  — assign / free / dispatch
+=================================================== */
+function assign(i, job){
+  job.startMs      = Date.now();
+  job.durMs        = (job.type==='img') ? IMG_MS + (Math.random()*800-400) : CHK_MS;
+  threads[i]       = job;
+  job.threadIdx    = i;
+  renderThreads();
+  setTimeout(function(){
+    if(job.done) job.done();
+    freeThread(i);
+  }, job.durMs);
+}
+
+function freeThread(i){
+  threads[i] = null;
+  // promote next waiter if any (but NOT if step4Locked)
+  if(!step4Locked && waitQ.length){
+    assign(i, waitQ.shift());
+  } else {
+    renderThreads();
+  }
+}
+
+function dispatch(job){
+  if(!step4Locked){
+    var f = threads.findIndex(function(t){ return t===null; });
+    if(f !== -1){ assign(f, job); return; }
+  }
+  // queue it
+  waitQ.push(job);
+  renderThreads();
+}
+
+/* ===================================================
+   TIMER BAR
+=================================================== */
+function startTimer(duration){
+  var fill  = document.getElementById('timer-fill');
+  var secs  = document.getElementById('timer-secs');
+  document.getElementById('timer-wrap').classList.add('show');
+  var t0 = Date.now();
+  (function tick(){
+    var rem = Math.max(0, duration-(Date.now()-t0));
+    var pct = rem/duration;
+    fill.style.width      = (pct*100)+'%';
+    fill.style.background = pct>.5?'#1d9e75':pct>.2?'#e09000':'#e03030';
+    secs.textContent      = (rem/1000).toFixed(1)+'s';
+    secs.className        = pct>.5?'g':pct>.2?'o':'r';
+    if(rem>0) timerRaf = requestAnimationFrame(tick);
+  })();
+}
+
+function stopTimer(){
+  if(timerRaf){ cancelAnimationFrame(timerRaf); timerRaf=null; }
+  document.getElementById('timer-wrap').classList.remove('show');
+  // reset for next use
+  document.getElementById('timer-fill').style.width = '100%';
+  document.getElementById('timer-secs').textContent = '10.0s';
+  document.getElementById('timer-secs').className   = 'g';
+}
+
+/* ===================================================
+   STEP MACHINE
+=================================================== */
+var STEPS = [
+  /* ── STEP 1 ── */
+  {
+    label: 'Step 1 of 5',
+    intro: 'The monolith is running. A customer has items in their cart. <strong>Click "Next step" to send the payment.</strong>',
+    action: function(done){
+      var start = Date.now();
+      var btn = document.getElementById('pay-btn');
+      var st  = document.getElementById('pay-status');
+      btn.className='waiting'; btn.textContent='Processing...';
+      st.className='wait'; st.textContent='Waiting for server thread...';
+      document.getElementById('checkout-side').style.background='#141000';
+      startTimer(TO_MS);
+
+      dispatch({ type:'chk', done: function(){
+        stopTimer();
+        var ms = Date.now()-start;
+        chkBusy = false;
+        setStatCheckout(ms);
+        btn.className='success'; btn.textContent='✓ Order placed!';
+        st.className='ok'; st.textContent='Completed in '+ms+'ms';
+        document.getElementById('checkout-side').style.background='#001510';
+        setNarration('Step 1 of 5',
+          'Checkout completed in <strong style="color:#1d9e75;font-size:20px">'+ms+'ms</strong> — '+
+          'a free thread was available immediately.<br><br>'+
+          'See the <strong>Last checkout</strong> box: it updated green. Customer is happy.');
+        setTimeout(function(){
+          btn.className='ready'; btn.textContent='Pay $136.00';
+          st.textContent=''; st.className='';
+          document.getElementById('checkout-side').style.background='#111';
+          done();
+        }, 2500);
+      }});
+    }
+  },
+
+  /* ── STEP 2 ── */
+  {
+    label: 'Step 2 of 5',
+    intro: 'Fast! Now the marketing team uploads 20 product photos. Each photo resize is slow CPU work that <strong>holds a thread for ~12 seconds</strong>. <strong>Click "Next step" to start the flood.</strong>',
+    action: function(done){
+      setNarration('Step 2 of 5',
+        'Image uploads are arriving every 0.7 s. Watch the threads on the right turn <strong style="color:#ff6622">orange</strong> one by one.<br><br>'+
+        'Each orange thread is <strong>locked</strong> — it cannot be used for anything else.');
+      var n=0;
+      floodTimer = setInterval(function(){
+        n++;
+        dispatch({ type:'img', done: function(){} });
+        if(n>=20){ clearInterval(floodTimer); floodTimer=null; done(); }
+      }, FLOOD_INTERVAL);
+    }
+  },
+
+  /* ── STEP 3 ── */
+  {
+    label: 'Step 3 of 5',
+    intro: 'Uploads are flooding in. <strong>Watch all 8 threads go orange.</strong> Click "Next step" when they are all occupied.',
+    action: function(done){
+      setNarration('Step 3 of 5',
+        'All 8 threads are <strong style="color:#ff6622">busy with image resize</strong>. The server is not crashed — it is fully occupied.<br><br>'+
+        'There is <strong>zero capacity</strong> left for anything else, including checkout.');
+      done();
+    }
+  },
+
+  /* ── STEP 4 ── */
+  {
+    label: 'Step 4 of 5',
+    intro: 'All threads are occupied. A customer tries to pay. <strong>Click "Next step" to attempt checkout.</strong>',
+    action: function(done){
+      /* ---- lock all 8 threads directly, no engine involvement ---- */
+      step4Locked = true;
+      waitQ = [];
+      for(var i=0;i<N;i++){
+        threads[i] = { type:'img', startMs: Date.now(), durMs: 30000 };
+      }
+      renderThreads();
+      startProgLoop();
+      document.getElementById('annotation').classList.add('show');
+
+      setNarration('Step 4 of 5',
+        'All 8 threads are <strong style="color:#ff6622">hard-locked</strong> by image resize for 30 seconds.<br><br>'+
+        'A customer just hit Pay. Watch the <strong style="color:#e09000">REQUEST TIMEOUT COUNTDOWN</strong> drain from 10 s to 0.<br><br>'+
+        'The checkout sits in the queue — waiting for a thread that will never arrive in time.');
+
+      /* ---- UI: set checkout in-progress ---- */
+      var btn = document.getElementById('pay-btn');
+      var st  = document.getElementById('pay-status');
+      btn.className='waiting'; btn.textContent='Processing payment...';
+      st.className='wait'; st.textContent='Waiting for a free server thread...';
+      document.getElementById('checkout-side').style.background='#110d00';
+
+      /* ---- push checkout job into queue (never assign it) ---- */
+      var job = { type:'chk', done: function(){} };
+      waitQ.push(job);
+      renderThreads();
+
+      /* ---- start the countdown ---- */
+      startTimer(TO_MS);
+
+      /* ---- kill after TO_MS ---- */
+      setTimeout(function(){
+        // cancel timer animation
+        if(timerRaf){ cancelAnimationFrame(timerRaf); timerRaf=null; }
+        var fill  = document.getElementById('timer-fill');
+        var secs  = document.getElementById('timer-secs');
+        fill.style.width='0%'; fill.style.background='#e03030';
+        secs.textContent='0.0s'; secs.className='r';
+
+        setTimeout(function(){
+          stopTimer();
+          timeouts++;
+
+          btn.className='failed'; btn.textContent='✗ Payment failed';
+          st.className='err'; st.textContent='Timed out after '+(TO_MS/1000)+'s — no thread was available';
+          document.getElementById('checkout-side').style.background='#160000';
+
+          /* ---- UPDATE STATS ---- */
+          setStatTimeout();
+
+          /* ---- flash threads red ---- */
+          flashThreads();
+
+          /* ---- remove job from queue ---- */
+          var qi = waitQ.indexOf(job);
+          if(qi!==-1) waitQ.splice(qi,1);
+          renderThreads();
+
+          setTimeout(function(){
+            document.getElementById('fail-overlay').classList.add('show');
+          }, 400);
+
+          setTimeout(function(){
+            setNarration('Step 4 of 5',
+              'The checkout request <strong style="color:#e03030;font-size:18px">TIMED OUT</strong> after 10 seconds.<br><br>'+
+              'The <strong>Timeouts</strong> counter is now <strong style="color:#e03030">1</strong>.<br><br>'+
+              '<strong>The checkout code did nothing wrong.</strong> It was ready to run in milliseconds. It just had no thread.');
+            done();
+          }, 1800);
+        }, 400);
+      }, TO_MS);
+    }
+  },
+
+  /* ── STEP 5 ── */
+  {
+    label: 'Step 5 of 5',
+    intro: 'This is the monolith problem. <strong>Click "Next step" to see the lesson.</strong>',
+    action: function(done){
+      setNarration('Step 5 of 5',
+        '<strong>Root cause:</strong> image upload and checkout share the same 8 threads.<br><br>'+
+        'Image resize is <strong>slow and greedy</strong>. Checkout is <strong>fast but starved</strong>.<br><br>'+
+        'In a microservices setup each service has <strong>its own thread pool</strong>. '+
+        'Uploads can consume all 8 of theirs — checkout still has all 8 of its own, completely isolated.');
+      document.getElementById('next-btn').disabled = true;
+      done();
+    }
+  }
+];
+
+function nextStep(){
+  if(currentStep >= STEPS.length) return;
+  var btn  = document.getElementById('next-btn');
+  btn.disabled = true;
+  var step = STEPS[currentStep];
+
+  // update step indicator
+  for(var i=0;i<5;i++){
+    document.getElementById('s'+i).className =
+      i < currentStep  ? 'step-item done'   :
+      i === currentStep ? 'step-item active' : 'step-item';
+  }
+
+  setNarration(step.label, step.intro);
+  step.action(function(){
+    currentStep++;
+    setTimeout(function(){
+      if(currentStep < STEPS.length) btn.disabled = false;
+    }, 800);
+  });
+}
+
+/* ===================================================
+   FLASH THREADS RED
+=================================================== */
+function flashThreads(){
+  var grid  = document.getElementById('thread-grid');
+  var cells = grid.children;
+  grid.style.transition = 'transform .15s';
+  grid.style.transform  = 'scale(1.04)';
+  setTimeout(function(){ grid.style.transform='scale(1)'; }, 150);
+  for(var i=0;i<cells.length;i++){
+    var c = cells[i];
+    if(c.className.indexOf('img')!==-1 || c.className.indexOf('wait')!==-1){
+      c.style.boxShadow  = '0 0 16px #e03030';
+      c.style.borderColor= '#e03030';
+      ;(function(el){ setTimeout(function(){ el.style.boxShadow=''; el.style.borderColor=''; },800); })(c);
+    }
+  }
+}
+
+/* ===================================================
+   RESET
+=================================================== */
+function doReset(){
+  step4Locked = false;
+  threads     = Array(N).fill(null);
+  waitQ       = [];
+  timeouts    = 0;
+  chkBusy     = false;
+  currentStep = 0;
+
+  if(floodTimer){ clearInterval(floodTimer); floodTimer=null; }
+  if(progRaf)   { cancelAnimationFrame(progRaf); progRaf=null; }
+  stopTimer();
+
+  document.getElementById('fail-overlay').classList.remove('show');
+  document.getElementById('queue-banner').classList.remove('show');
+  document.getElementById('annotation').classList.remove('show');
+  document.getElementById('checkout-side').style.background = '#111';
+
+  var pb = document.getElementById('pay-btn');
+  pb.className='ready'; pb.textContent='Pay $136.00';
+  var ps = document.getElementById('pay-status');
+  ps.textContent=''; ps.className='';
+
+  // reset stat cards
+  document.getElementById('sv-t').textContent  = '—';
+  document.getElementById('sv-t').className    = 'sc-val';
+  document.getElementById('sc-t').className    = 'sc';
+  document.getElementById('sv-to').textContent = '0';
+  document.getElementById('sv-to').className   = 'sc-val';
+  document.getElementById('sc-to').className   = 'sc';
+
+  document.getElementById('next-btn').disabled = false;
+  document.getElementById('busy-badge').textContent = '0/8 busy';
+  document.getElementById('busy-badge').className   = '';
+
+  for(var i=0;i<5;i++)
+    document.getElementById('s'+i).className = 'step-item' + (i===0?' active':'');
+
+  setNarration('Step 1 of 5','Click <strong>Next step</strong> to begin.');
+  renderThreads();
+}
+
+/* ===================================================
+   INIT
+=================================================== */
+renderThreads();
+setNarration('Step 1 of 5','Click <strong>Next step</strong> to begin.');
+</script>
+</body>
+</html>
