@@ -1,0 +1,21 @@
+{
+	"servers": {
+		"mcp-products-server": {
+			"type": "stdio",
+			"command": "/home/yvrachel/workspace/AITools-Course/MCP -examples/mcp/.venv/bin/python",
+			"args": [
+				"-m",
+				"mcp_server.main"
+			],
+			"cwd": "/home/yvrachel/workspace/AITools-Course/MCP -examples/mcp/src"
+		},
+	 "weather-service": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/home/yvrachel/workspace/AITools-Course/MCP -examples/mcp-js/server.js"
+      ]
+    }
+	},
+	"inputs": []
+}
