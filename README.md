@@ -25,40 +25,40 @@ We cover key technologies and concepts widely used in the industry, combining th
 
 ## Syllabus
 
-### 🐳 01 · Docker
+### 🐳 02 · Docker
 Containerization fundamentals, containers vs virtual machines, building Images, writing `Dockerfile`s, managing networks and volumes, and orchestrating multi-service environments with Docker Compose.
 
-### ⚡ 02 · Caching
+### ⚡ 03 · Caching
 Caching principles, cache types (in-memory, distributed), working with Redis, strategies such as Cache-Aside, Write-Through and TTL, and how caching improves performance and reduces database load.
 
-### 🧩 03 · Microservices
+### 🧩 04 · Microservices
 Moving from monolith to Microservices, SOLID principles at the service level, sync vs async communication, distributed data management, Bounded Context, and Domain Driven Design basics.
 
-### 🚪 04 · API Gateway
+### 🚪 05 · API Gateway
 The Gateway as a single entry point, routing management, authentication, rate limiting, centralized logging, and how a Gateway simplifies communication with Microservices.
 
-### ⚖️ 05 · Load Balancer
+### ⚖️ 06 · Load Balancer
 Load balancing principles, strategies (Round Robin, Least Connections, IP Hash), L4 vs L7 differences, High Availability, Health Checks, and Horizontal Scaling.
 
-### 🐰 06 · RabbitMQ · Message Queues
+### 🐰 07 · RabbitMQ · Message Queues
 Queue architecture, Producer/Consumer Pattern, Exchanges, Queues & Bindings, Acknowledgments, Dead Letter Queues, and async messaging for service decoupling.
 
-### 🔄 07 · CI/CD
+### 🔄 08 · CI/CD
 Continuous Integration & Continuous Deployment principles, building Pipelines, GitHub Actions, automated testing, Docker inside CI, and environment management (dev / staging / production).
 
-### 🌐 08 · REST vs GraphQL vs gRPC
+### 🌐 09 · REST vs GraphQL vs gRPC
 Understanding the three main API communication styles, when to use each, trade-offs in performance and complexity, and practical examples of each in a microservices context.
 
-### 📋 09 · 12-Factor App
+### 📋 10 · 12-Factor App
 The industry-standard methodology for building scalable, maintainable apps — covering config, dependencies, statelessness, logs, and more. A mental model that ties together everything in the course.
 
-### 🔐 10 · Authentication & Authorization
+### 🔐 11 · Authentication & Authorization
 JWT, OAuth2, API Keys, and session-based auth. Difference between AuthN and AuthZ, role-based access control (RBAC), and how to implement auth correctly across microservices.
 
-### 📊 11 · Logging & Monitoring
+### 📊 12 · Logging & Monitoring
 Centralized logging, structured logs, log levels, distributed tracing across services, alerting, and intro to observability tools such as the ELK Stack and Grafana.
 
-### ☸️ 12 · Kubernetes Basics
+### ☸️ 13 · Kubernetes Basics
 Container orchestration concepts, Pods, Deployments, Services and Ingress, scaling, self-healing, and how Kubernetes extends what we built with Docker and Docker Compose.
 
 ---
