@@ -43,22 +43,25 @@ Load balancing principles, strategies (Round Robin, Least Connections, IP Hash),
 ### 🐰 07 · RabbitMQ · Message Queues
 Queue architecture, Producer/Consumer Pattern, Exchanges, Queues & Bindings, Acknowledgments, Dead Letter Queues, and async messaging for service decoupling.
 
-### 🔄 08 · CI/CD
-Continuous Integration & Continuous Deployment principles, building Pipelines, GitHub Actions, automated testing, Docker inside CI, and environment management (dev / staging / production).
-
-### 🌐 09 · REST vs GraphQL vs gRPC
-Understanding the three main API communication styles, when to use each, trade-offs in performance and complexity, and practical examples of each in a microservices context.
-
-### 📋 10 · 12-Factor App
-The industry-standard methodology for building scalable, maintainable apps — covering config, dependencies, statelessness, logs, and more. A mental model that ties together everything in the course.
-
-### 🔐 11 · Authentication & Authorization
-JWT, OAuth2, API Keys, and session-based auth. Difference between AuthN and AuthZ, role-based access control (RBAC), and how to implement auth correctly across microservices.
-
-### 📊 12 · Logging & Monitoring
+### 📊 08 · Logging & Monitoring
 Centralized logging, structured logs, log levels, distributed tracing across services, alerting, and intro to observability tools such as the ELK Stack and Grafana.
 
-### ☸️ 13 · Kubernetes Basics
+### 🗄️ 09 · Databases — SQL vs NoSQL + Indexes
+Relational model and ACID transactions, SQL index types (B-Tree, composite, covering), query planning with `EXPLAIN`, NoSQL categories (Document, Key-Value, Column, Graph), CAP theorem, eventual consistency, and a decision framework for choosing the right database per microservice.
+
+### 🔄 10 · CI/CD
+Continuous Integration & Continuous Deployment principles, building Pipelines, GitHub Actions, automated testing, Docker inside CI, and environment management (dev / staging / production).
+
+### 🌐 11 · REST vs GraphQL vs gRPC
+Understanding the three main API communication styles, when to use each, trade-offs in performance and complexity, and practical examples of each in a microservices context.
+
+### 📋 12 · 12-Factor App
+The industry-standard methodology for building scalable, maintainable apps — covering config, dependencies, statelessness, logs, and more. A mental model that ties together everything in the course.
+
+### 🔐 13 · Authentication & Authorization
+JWT, OAuth2, API Keys, and session-based auth. Difference between AuthN and AuthZ, role-based access control (RBAC), and how to implement auth correctly across microservices.
+
+### ☸️ 14 · Kubernetes Basics
 Container orchestration concepts, Pods, Deployments, Services and Ingress, scaling, self-healing, and how Kubernetes extends what we built with Docker and Docker Compose.
 
 ---
@@ -71,163 +74,171 @@ architecture-course/
 ├── README.md
 │
 ├── 02-docker/
-│   ├── README.md                      ← Theory & explanation
-│   ├── slides.pdf                     ← Lesson presentation
+│   ├── README.md
+│   ├── slides.pdf
 │   ├── examples/
 │   │   ├── Dockerfile.basic
 │   │   ├── Dockerfile.multi-stage
 │   │   └── docker-compose.yml
 │   └── exercises/
-│       ├── README.md                  ← Homework instructions
-│       ├── exercise-01/               ← Build an Image for a Node.js app
-│       ├── exercise-02/               ← Docker Compose with a DB
-│       └── solution/                  ← Revealed after submission
+│       ├── README.md
+│       ├── exercise-01/
+│       ├── exercise-02/
+│       └── solution/
 │
 ├── 03-caching/
 │   ├── README.md
-│   ├── slides.pdf                     ← Lesson presentation
+│   ├── slides.pdf
 │   ├── examples/
 │   │   ├── redis-basic/
 │   │   └── cache-aside-pattern/
 │   └── exercises/
 │       ├── README.md
-│       ├── exercise-01/               ← Add cache to an existing service
-│       ├── exercise-02/               ← TTL & invalidation strategy
+│       ├── exercise-01/
+│       ├── exercise-02/
 │       └── solution/
 │
 ├── 04-microservices/
 │   ├── README.md
-│   ├── slides.pdf                     ← Lesson presentation
+│   ├── slides.pdf
 │   ├── examples/
 │   │   ├── user-service/
 │   │   ├── order-service/
 │   │   └── docker-compose.yml
 │   └── exercises/
 │       ├── README.md
-│       ├── exercise-01/               ← Split a monolith into two services
-│       ├── exercise-02/               ← Inter-service communication
+│       ├── exercise-01/
+│       ├── exercise-02/
 │       └── solution/
 │
 ├── 05-api-gateway/
 │   ├── README.md
-│   ├── slides.pdf                     ← Lesson presentation
+│   ├── slides.pdf
 │   ├── examples/
 │   │   ├── nginx-gateway/
 │   │   └── express-gateway/
 │   └── exercises/
 │       ├── README.md
-│       ├── exercise-01/               ← Configure routing for 2 services
-│       ├── exercise-02/               ← Add rate limiting & auth middleware
+│       ├── exercise-01/
+│       ├── exercise-02/
 │       └── solution/
 │
 ├── 06-load-balancer/
 │   ├── README.md
-│   ├── slides.pdf                     ← Lesson presentation
+│   ├── slides.pdf
 │   ├── examples/
 │   │   ├── nginx-lb/
 │   │   └── docker-scale/
 │   └── exercises/
 │       ├── README.md
-│       ├── exercise-01/               ← Round Robin across 3 instances
-│       ├── exercise-02/               ← Health Checks & failover
+│       ├── exercise-01/
+│       ├── exercise-02/
 │       └── solution/
 │
 ├── 07-rabbitmq/
 │   ├── README.md
-│   ├── slides.pdf                     ← Lesson presentation
+│   ├── slides.pdf
 │   ├── examples/
 │   │   ├── basic-queue/
 │   │   ├── exchange-types/
 │   │   └── dead-letter-queue/
 │   └── exercises/
 │       ├── README.md
-│       ├── exercise-01/               ← Async order queue implementation
-│       ├── exercise-02/               ← Dead Letter Queue & retry logic
+│       ├── exercise-01/
+│       ├── exercise-02/
 │       └── solution/
 │
-├── 08-ci-cd/
+├── 08-logging-monitoring/
 │   ├── README.md
-│   ├── slides.pdf                     ← Lesson presentation
+│   ├── slides.pdf
 │   ├── examples/
-│   │   ├── .github/
-│   │   │   └── workflows/
-│   │   │       ├── ci.yml             ← Automated tests pipeline
-│   │   │       └── cd.yml             ← Deployment pipeline
+│   │   ├── structured-logging/
+│   │   └── grafana-setup/
+│   └── exercises/
+│       ├── README.md
+│       ├── exercise-01/
+│       ├── exercise-02/
+│       └── solution/
+│
+├── 09-databases/                          ← NEW
+│   ├── README.md
+│   ├── slides.pdf
+│   ├── examples/
+│   │   ├── postgres-indexes/
+│   │   ├── mongodb-documents/
+│   │   └── docker-compose.yml
+│   └── exercises/
+│       ├── README.md
+│       ├── exercise-01/                   ← Index impact measurement
+│       ├── exercise-02/                   ← SQL vs NoSQL schema comparison
+│       └── solution/
+│
+├── 10-ci-cd/
+│   ├── README.md
+│   ├── slides.pdf
+│   ├── examples/
+│   │   ├── .github/workflows/
+│   │   │   ├── ci.yml
+│   │   │   └── cd.yml
 │   │   └── Dockerfile
 │   └── exercises/
 │       ├── README.md
-│       ├── exercise-01/               ← Build a CI Pipeline with tests
-│       ├── exercise-02/               ← Add CD to staging environment
+│       ├── exercise-01/
+│       ├── exercise-02/
 │       └── solution/
 │
-└── final-project/
-    ├── README.md                      ← Final project description
-    └── requirements.md                ← Requirements & submission structure
-│
-├── 09-rest-graphql-grpc/
+├── 11-rest-graphql-grpc/
 │   ├── README.md
-│   ├── slides.pdf                     ← Lesson presentation
+│   ├── slides.pdf
 │   ├── examples/
 │   │   ├── rest-api/
 │   │   ├── graphql-api/
 │   │   └── grpc-api/
 │   └── exercises/
 │       ├── README.md
-│       ├── exercise-01/               ← Build the same endpoint in REST & GraphQL
-│       ├── exercise-02/               ← gRPC service with .proto file
+│       ├── exercise-01/
+│       ├── exercise-02/
 │       └── solution/
 │
-├── 10-12-factor/
+├── 12-12-factor/
 │   ├── README.md
-│   ├── slides.pdf                     ← Lesson presentation
+│   ├── slides.pdf
 │   ├── examples/
 │   │   └── 12factor-app/
 │   └── exercises/
 │       ├── README.md
-│       ├── exercise-01/               ← Refactor an app to follow 12-Factor
+│       ├── exercise-01/
 │       └── solution/
 │
-├── 11-auth/
+├── 13-auth/
 │   ├── README.md
-│   ├── slides.pdf                     ← Lesson presentation
+│   ├── slides.pdf
 │   ├── examples/
 │   │   ├── jwt-auth/
 │   │   ├── oauth2-flow/
 │   │   └── rbac/
 │   └── exercises/
 │       ├── README.md
-│       ├── exercise-01/               ← JWT login & protected routes
-│       ├── exercise-02/               ← RBAC across two services
+│       ├── exercise-01/
+│       ├── exercise-02/
 │       └── solution/
 │
-├── 12-logging-monitoring/
+├── 14-kubernetes/
 │   ├── README.md
-│   ├── slides.pdf                     ← Lesson presentation
-│   ├── examples/
-│   │   ├── structured-logging/
-│   │   └── grafana-setup/
-│   └── exercises/
-│       ├── README.md
-│       ├── exercise-01/               ← Add structured logging to a service
-│       ├── exercise-02/               ← Set up a basic Grafana dashboard
-│       └── solution/
-│
-├── 13-kubernetes/
-│   ├── README.md
-│   ├── slides.pdf                     ← Lesson presentation
+│   ├── slides.pdf
 │   ├── examples/
 │   │   ├── pod.yaml
 │   │   ├── deployment.yaml
 │   │   └── service.yaml
 │   └── exercises/
 │       ├── README.md
-│       ├── exercise-01/               ← Deploy a service to local K8s cluster
-│       ├── exercise-02/               ← Scale a deployment & configure Ingress
+│       ├── exercise-01/
+│       ├── exercise-02/
 │       └── solution/
 │
 └── final-project/
-    ├── README.md                      ← Final project description
-    └── requirements.md                ← Requirements & submission structure
+    ├── README.md
+    └── requirements.md
 ```
 
 ---
@@ -269,7 +280,7 @@ architecture-course/
 - Submit at least **48 hours** before the next lesson
 - Each exercise must include a short `README.md` explaining your solution
 - Code must run without errors after `docker-compose up` (where applicable)
-- Email subject format: `[Architecture Course] Lesson 01 - Your Name`
+- Email subject format: `[Architecture Course] Lesson 0X - Your Name`
 
 ### Grading
 
