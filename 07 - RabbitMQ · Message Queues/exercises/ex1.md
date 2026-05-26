@@ -1,8 +1,7 @@
 # 🐰 Exercise — Async Messaging with RabbitMQ in a Store Microservice
 
-> **Lesson:** 06 · Message Brokers
+> **Lesson:** 07 · Message Brokers
 > **Level:** Beginner
-> **Estimated Time:** 45–60 minutes
 > **Tech:** Docker, Docker Compose, RabbitMQ, .NET 8
 
 ---
