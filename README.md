@@ -70,7 +70,7 @@ architecture-course/
 │
 ├── README.md
 │
-├── 01-docker/
+├── 02-docker/
 │   ├── README.md                      ← Theory & explanation
 │   ├── slides.pdf                     ← Lesson presentation
 │   ├── examples/
@@ -83,7 +83,7 @@ architecture-course/
 │       ├── exercise-02/               ← Docker Compose with a DB
 │       └── solution/                  ← Revealed after submission
 │
-├── 02-caching/
+├── 03-caching/
 │   ├── README.md
 │   ├── slides.pdf                     ← Lesson presentation
 │   ├── examples/
@@ -95,7 +95,7 @@ architecture-course/
 │       ├── exercise-02/               ← TTL & invalidation strategy
 │       └── solution/
 │
-├── 03-microservices/
+├── 04-microservices/
 │   ├── README.md
 │   ├── slides.pdf                     ← Lesson presentation
 │   ├── examples/
@@ -108,7 +108,7 @@ architecture-course/
 │       ├── exercise-02/               ← Inter-service communication
 │       └── solution/
 │
-├── 04-api-gateway/
+├── 05-api-gateway/
 │   ├── README.md
 │   ├── slides.pdf                     ← Lesson presentation
 │   ├── examples/
@@ -120,7 +120,7 @@ architecture-course/
 │       ├── exercise-02/               ← Add rate limiting & auth middleware
 │       └── solution/
 │
-├── 05-load-balancer/
+├── 06-load-balancer/
 │   ├── README.md
 │   ├── slides.pdf                     ← Lesson presentation
 │   ├── examples/
@@ -132,7 +132,7 @@ architecture-course/
 │       ├── exercise-02/               ← Health Checks & failover
 │       └── solution/
 │
-├── 06-rabbitmq/
+├── 07-rabbitmq/
 │   ├── README.md
 │   ├── slides.pdf                     ← Lesson presentation
 │   ├── examples/
@@ -145,7 +145,7 @@ architecture-course/
 │       ├── exercise-02/               ← Dead Letter Queue & retry logic
 │       └── solution/
 │
-├── 07-ci-cd/
+├── 08-ci-cd/
 │   ├── README.md
 │   ├── slides.pdf                     ← Lesson presentation
 │   ├── examples/
@@ -164,7 +164,7 @@ architecture-course/
     ├── README.md                      ← Final project description
     └── requirements.md                ← Requirements & submission structure
 │
-├── 08-rest-graphql-grpc/
+├── 09-rest-graphql-grpc/
 │   ├── README.md
 │   ├── slides.pdf                     ← Lesson presentation
 │   ├── examples/
@@ -177,7 +177,7 @@ architecture-course/
 │       ├── exercise-02/               ← gRPC service with .proto file
 │       └── solution/
 │
-├── 09-12-factor/
+├── 10-12-factor/
 │   ├── README.md
 │   ├── slides.pdf                     ← Lesson presentation
 │   ├── examples/
@@ -187,7 +187,7 @@ architecture-course/
 │       ├── exercise-01/               ← Refactor an app to follow 12-Factor
 │       └── solution/
 │
-├── 10-auth/
+├── 11-auth/
 │   ├── README.md
 │   ├── slides.pdf                     ← Lesson presentation
 │   ├── examples/
@@ -200,7 +200,7 @@ architecture-course/
 │       ├── exercise-02/               ← RBAC across two services
 │       └── solution/
 │
-├── 11-logging-monitoring/
+├── 12-logging-monitoring/
 │   ├── README.md
 │   ├── slides.pdf                     ← Lesson presentation
 │   ├── examples/
@@ -212,7 +212,7 @@ architecture-course/
 │       ├── exercise-02/               ← Set up a basic Grafana dashboard
 │       └── solution/
 │
-├── 12-kubernetes/
+├── 13-kubernetes/
 │   ├── README.md
 │   ├── slides.pdf                     ← Lesson presentation
 │   ├── examples/
