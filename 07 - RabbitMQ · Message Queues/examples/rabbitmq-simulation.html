@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How RabbitMQ Works — Interactive Simulation</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f6f5f1;
+    --surface-2: #efeee8;
+    --border: rgba(0,0,0,0.12);
+    --text: #1a1a18;
+    --text-2: #5f5e5a;
+    --text-3: #8a8980;
+    --info-bg: #e6f1fb;
+    --info-tx: #0c447c;
+    --success-bg: #eaf3de;
+    --success-tx: #3b6d11;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --purple: #534ab7;
+    --blue: #378add;
+    --teal: #1d9e75;
+    --gray: #888780;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1f1e1c; --surface: #2a2926; --surface-2: #333230;
+      --border: rgba(255,255,255,0.14);
+      --text: #f0efe9; --text-2: #b4b2a9; --text-3: #888780;
+      --info-bg: #16324d; --info-tx: #b5d4f4;
+      --success-bg: #25391a; --success-tx: #c0dd97;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--font); background: var(--bg); color: var(--text);
+    margin: 0; padding: 32px 20px; line-height: 1.6; font-size: 14px;
+  }
+  .page { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 500; margin: 0 0 4px; }
+  h2 { font-size: 18px; font-weight: 500; margin: 2.5rem 0 0.25rem; }
+  .lead { color: var(--text-2); margin: 0 0 2rem; }
+  .desc { color: var(--text-2); margin: 0 0 1.25rem; font-size: 13px; }
+
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 1.25rem; }
+  button {
+    font: inherit; font-size: 13px; padding: 7px 12px; border-radius: var(--radius-md);
+    border: 0.5px solid var(--border); background: transparent; color: var(--text);
+    cursor: pointer; transition: background 0.15s, transform 0.05s; display: inline-flex; align-items: center; gap: 6px;
+  }
+  button:hover { background: var(--surface); }
+  button:active { transform: scale(0.98); }
+  select {
+    font: inherit; font-size: 13px; padding: 6px 10px; border-radius: var(--radius-md);
+    border: 0.5px solid var(--border); background: var(--bg); color: var(--text);
+  }
+  .spacer { margin-left: auto; color: var(--text-2); }
+  .ico { width: 1em; height: 1em; vertical-align: -0.12em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .stage { position: relative; display: grid; gap: 14px; align-items: stretch; min-height: 320px; }
+  .stage.s1 { grid-template-columns: 88px 140px 1fr 116px; }
+  .stage.s2 { grid-template-columns: 78px 124px 1fr 140px; }
+  .col { display: flex; flex-direction: column; }
+  .col-title { font-size: 12px; color: var(--text-2); margin-bottom: 8px; text-align: center; min-height: 30px; }
+  .node { background: var(--surface); border-radius: var(--radius-lg); padding: 10px; flex: 1; display: flex; flex-direction: column; }
+  .node.center { justify-content: center; align-items: center; text-align: center; }
+  .qslot { display: flex; flex-direction: column-reverse; gap: 5px; flex: 1; padding: 8px; border-radius: var(--radius-md); background: var(--bg); border: 0.5px solid var(--border); min-height: 110px; overflow: hidden; }
+  .msg { height: 23px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: #fff; }
+  .flyer { position: absolute; height: 23px; min-width: 44px; padding: 0 7px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: #fff; z-index: 5; pointer-events: none; }
+  .binding { font-size: 10px; color: var(--text-3); font-family: var(--mono); }
+  .small { font-size: 11px; color: var(--text-2); }
+  .smaller { font-size: 10px; color: var(--text-3); }
+
+  .worker { padding: 8px; border-radius: var(--radius-md); margin-bottom: 8px; background: var(--surface); }
+  .worker-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 500; }
+  .state { font-size: 11px; text-align: center; padding: 5px; border-radius: var(--radius-md); margin-top: 6px; min-height: 28px; display: flex; align-items: center; justify-content: center; background: var(--surface-2); color: var(--text-3); }
+  .bar { height: 4px; border-radius: 2px; background: var(--border); margin-top: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; width: 0%; background: var(--teal); }
+  .ceye { font-size: 11px; text-align: center; padding: 4px; border-radius: var(--radius-md); margin-top: 6px; min-height: 30px; display: flex; align-items: center; justify-content: center; background: var(--surface-2); color: var(--text-3); }
+
+  .stats { display: flex; gap: 10px; margin-top: 1.25rem; }
+  .stat { flex: 1; background: var(--surface); border-radius: var(--radius-md); padding: 10px; text-align: center; }
+  .stat b { font-size: 20px; font-weight: 500; display: block; }
+  .stat span { font-size: 11px; color: var(--text-2); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 1.25rem; font-size: 12px; color: var(--text-2); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+  hr { border: none; border-top: 0.5px solid var(--border); margin: 3rem 0 0; }
+  footer { margin-top: 2rem; font-size: 12px; color: var(--text-3); }
+
+  .vk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .vk-panel { background: var(--surface); border-radius: var(--radius-lg); padding: 14px; }
+  .vk-h { font-size: 14px; font-weight: 500; margin: 0 0 2px; }
+  .vk-sub { font-size: 11px; color: var(--text-2); margin: 0 0 12px; }
+  .vk-store { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 8px; min-height: 200px; display: flex; flex-direction: column; gap: 5px; }
+  .vk-cell { height: 26px; border-radius: 5px; display: flex; align-items: center; padding: 0 8px; gap: 8px; font-size: 11px; font-weight: 500; color: #fff; position: relative; }
+  .vk-idx { font-family: var(--mono); font-size: 10px; opacity: 0.75; min-width: 14px; }
+  .vk-empty { color: var(--text-3); font-size: 11px; text-align: center; padding: 16px 0; }
+  .vk-off { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-top: 8px; padding: 5px 8px; border-radius: var(--radius-md); }
+  .vk-pointer { position: absolute; font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 500; }
+  .vk-note { font-size: 11px; color: var(--text-2); margin-top: 10px; min-height: 30px; }
+  .rtl { direction: rtl; text-align: right; }
+  .rtl .vk-pointer { left: 6px; right: auto; }
+  .rtl .col-title, .rtl .small, .rtl .binding { direction: rtl; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>How RabbitMQ works</h1>
+  <p class="lead">Three interactive simulations. Open in any browser — no internet needed.</p>
+
+  <h2>1 · Routing: exchange → queues → consumers</h2>
+  <p class="desc">A message is published with a routing key. The exchange reads the key and routes a copy to each queue whose binding matches. Consumers read from their queue and acknowledge. Try switching the exchange type.</p>
+
+  <div class="controls">
+    <button id="r-pub"><svg class="ico" viewBox="0 0 24 24"><path d="M10 14L21 3M21 3l-7 18-4-9-9-4 20-5z"/></svg> publish a message</button>
+    <button id="r-auto"><svg class="ico" viewBox="0 0 24 24"><path d="M5 3l14 9-14 9z"/></svg> auto</button>
+    <label class="small">exchange</label>
+    <select id="r-type"><option value="direct">direct</option><option value="topic">topic</option><option value="fanout">fanout</option></select>
+    <span class="spacer">published <b id="r-count">0</b></span>
+  </div>
+
+  <div class="stage s1" id="r-stage">
+    <div class="col">
+      <div class="col-title">producer</div>
+      <div class="node center" id="r-producer">
+        <svg class="ico" style="width:22px;height:22px;color:var(--text-2)" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        <div class="small" style="margin-top:6px">app code</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-title">exchange</div>
+      <div class="node center" id="r-exchange">
+        <svg class="ico" style="width:22px;height:22px;color:var(--text-2)" viewBox="0 0 24 24"><path d="M3 12h6m0 0l3-4m-3 4l3 4m9-4h-6"/></svg>
+        <div style="font-size:12px;font-weight:500;margin-top:6px" id="r-extype">direct</div>
+        <div class="smaller" style="margin-top:2px">reads routing key</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-title">queues (bound by rules)</div>
+      <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+        <div class="node" style="padding:8px">
+          <div style="display:flex;justify-content:space-between;font-size:11px"><b>orders</b><span class="binding" id="r-b0">order.*</span></div>
+          <div class="qslot" id="r-q0"></div>
+        </div>
+        <div class="node" style="padding:8px">
+          <div style="display:flex;justify-content:space-between;font-size:11px"><b>logs</b><span class="binding" id="r-b1">log.*</span></div>
+          <div class="qslot" id="r-q1"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-title">consumers</div>
+      <div style="display:flex;flex-direction:column;gap:8px;flex:1">
+        <div class="node" style="padding:8px;justify-content:center">
+          <div style="font-size:11px;font-weight:500;text-align:center">consumer A</div>
+          <div class="ceye" id="r-c0">idle</div>
+        </div>
+        <div class="node" style="padding:8px;justify-content:center">
+          <div style="font-size:11px;font-weight:500;text-align:center">consumer B</div>
+          <div class="ceye" id="r-c1">idle</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--blue)"></span>order.*</span>
+    <span><span class="dot" style="background:var(--teal)"></span>log.*</span>
+    <span><span class="dot" style="background:var(--gray)"></span>other (unroutable)</span>
+  </div>
+
+  <hr>
+
+  <h2>2 · Competing consumers (work queue)</h2>
+  <p class="desc">One shared queue, three consumers at different speeds. Each task goes to exactly one worker; faster workers handle more. The default (nameless) exchange routes by queue name. Use "burst of 5" to see the queue buffer a spike.</p>
+
+  <div class="controls">
+    <button id="c-pub"><svg class="ico" viewBox="0 0 24 24"><path d="M10 14L21 3M21 3l-7 18-4-9-9-4 20-5z"/></svg> add a task</button>
+    <button id="c-auto"><svg class="ico" viewBox="0 0 24 24"><path d="M5 3l14 9-14 9z"/></svg> auto</button>
+    <button id="c-burst"><svg class="ico" viewBox="0 0 24 24"><path d="M12 2l9 4.5-9 4.5-9-4.5zM3 12l9 4.5 9-4.5M3 17l9 4.5 9-4.5"/></svg> burst of 5</button>
+    <span class="spacer">in queue: <b id="c-depth">0</b></span>
+  </div>
+
+  <div class="stage s2" id="c-stage">
+    <div class="col">
+      <div class="col-title">producer</div>
+      <div class="node center" id="c-producer">
+        <svg class="ico" style="width:22px;height:22px;color:var(--text-2)" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        <div class="small" style="margin-top:6px">emits tasks</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-title">default exchange <span style="color:var(--text-3)">(nameless)</span></div>
+      <div class="node center" id="c-exchange">
+        <svg class="ico" style="width:22px;height:22px;color:var(--text-2)" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <div class="small" style="margin-top:6px">routes by</div>
+        <div class="binding">queue name</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-title">queue: <span style="font-family:var(--mono)">tasks</span></div>
+      <div class="node" style="padding:8px">
+        <div class="qslot" id="c-queue" style="min-height:120px"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-title">competing consumers</div>
+      <div style="flex:1" id="c-workers"></div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="c-w0">0</b><span>worker A · fast</span></div>
+    <div class="stat"><b id="c-w1">0</b><span>worker B · medium</span></div>
+    <div class="stat"><b id="c-w2">0</b><span>worker C · slow</span></div>
+  </div>
+
+  <hr>
+
+  <h2>3 · RabbitMQ vs Kafka — what happens to a message after it's consumed</h2>
+  <p class="desc">Both sides receive the exact same messages. In RabbitMQ a message is deleted from the queue once a consumer acknowledges it (ack). In Kafka the messages stay in the log, and each consumer reads independently using its own offset. Publish a few messages, let consumer 1 read — then try consumer 2.</p>
+
+  <div class="controls">
+    <button id="v-pub"><svg class="ico" viewBox="0 0 24 24"><path d="M10 14L21 3M21 3l-7 18-4-9-9-4 20-5z"/></svg> publish (to both sides)</button>
+    <button id="v-c1"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 19h16"/></svg> consumer 1 reads</button>
+    <button id="v-c2"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3v12m0 0l4-4m-4 4l-4-4M4 19h16"/></svg> consumer 2 reads</button>
+    <button id="v-reset"><svg class="ico" viewBox="0 0 24 24"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3M3 4v4h4"/></svg> reset</button>
+  </div>
+
+  <div class="vk-grid">
+    <div class="vk-panel">
+      <p class="vk-h">RabbitMQ <span style="color:var(--text-3);font-weight:400">· queue</span></p>
+      <p class="vk-sub">message deleted after ack</p>
+      <div class="vk-store" id="v-rabbit"></div>
+      <div class="vk-note" id="v-rnote"></div>
+    </div>
+    <div class="vk-panel">
+      <p class="vk-h">Kafka <span style="color:var(--text-3);font-weight:400">· log</span></p>
+      <p class="vk-sub">messages stay · each consumer has an offset</p>
+      <div class="vk-store" id="v-kafka"></div>
+      <div class="vk-off" style="background:var(--info-bg);color:var(--info-tx)">consumer 1 offset: <b id="v-o1">0</b></div>
+      <div class="vk-off" style="background:var(--success-bg);color:var(--success-tx)">consumer 2 offset: <b id="v-o2">0</b></div>
+      <div class="vk-note" id="v-knote"></div>
+    </div>
+  </div>
+
+  <footer>Producer → exchange → queue → consumer. The exchange is always present, even when a single trivial route makes it invisible.</footer>
+</div>
+
+<script>
+/* ---------- Simulation 1: routing ---------- */
+(function(){
+  var stage=document.getElementById('r-stage');
+  var keys=[
+    {k:'order.new',c:'#378add',q:0},{k:'order.paid',c:'#378add',q:0},
+    {k:'log.info',c:'#1d9e75',q:1},{k:'log.error',c:'#1d9e75',q:1},
+    {k:'metric.cpu',c:'#888780',q:-1}
+  ];
+  var count=0,autoTimer=null;
+  var qEls=[document.getElementById('r-q0'),document.getElementById('r-q1')];
+  var cEls=[document.getElementById('r-c0'),document.getElementById('r-c1')];
+  var typeSel=document.getElementById('r-type');
+  var busy=[false,false];
+  function rect(el){var r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();return{x:r.left-s.left,y:r.top-s.top,w:r.width,h:r.height};}
+  function route(m){var t=typeSel.value;if(t==='fanout')return[0,1];if(m.q===-1)return[];return[m.q];}
+  function flyer(t,c){var f=document.createElement('div');f.className='flyer';f.textContent=t;f.style.background=c;f.style.transition='left .55s ease,top .55s ease,opacity .35s';stage.appendChild(f);return f;}
+  function moveTo(f,el,cb){var r=rect(el);f.style.left=(r.x+r.w/2-23)+'px';f.style.top=(r.y+r.h/2-11)+'px';setTimeout(cb,580);}
+  function enqueue(qi,m){var s=qEls[qi];var d=document.createElement('div');d.className='msg';d.style.background=m.c;d.textContent=m.short;s.appendChild(d);tryConsume(qi);}
+  function tryConsume(qi){
+    if(busy[qi])return;var s=qEls[qi];if(!s.firstChild)return;busy[qi]=true;
+    var m=s.firstChild,txt=m.textContent,eye=cEls[qi];
+    eye.style.background='var(--info-bg)';eye.style.color='var(--info-tx)';eye.textContent='reading '+txt+'…';
+    setTimeout(function(){
+      if(m.parentNode)m.parentNode.removeChild(m);
+      eye.style.background='var(--success-bg)';eye.style.color='var(--success-tx)';eye.textContent='✓ ack '+txt;
+      setTimeout(function(){eye.style.background='var(--surface-2)';eye.style.color='var(--text-3)';eye.textContent='idle';busy[qi]=false;tryConsume(qi);},700);
+    },850);
+  }
+  function publish(){
+    var m=keys[Math.floor(Math.random()*keys.length)];m.short=m.k.split('.')[1]||m.k;
+    count++;document.getElementById('r-count').textContent=count;
+    var f=flyer(m.k,m.c),pr=rect(document.getElementById('r-producer'));
+    f.style.left=(pr.x+pr.w/2-23)+'px';f.style.top=(pr.y+pr.h/2-11)+'px';f.style.opacity='0';
+    requestAnimationFrame(function(){f.style.opacity='1';
+      moveTo(f,document.getElementById('r-exchange'),function(){
+        var t=route(m);
+        if(!t.length){f.style.opacity='0';setTimeout(function(){if(f.parentNode)f.parentNode.removeChild(f);},350);return;}
+        moveTo(f,qEls[t[0]],function(){if(f.parentNode)f.parentNode.removeChild(f);t.forEach(function(qi){enqueue(qi,m);});});
+      });
+    });
+  }
+  function bindings(){var t=typeSel.value;document.getElementById('r-extype').textContent=t;
+    var b0=document.getElementById('r-b0'),b1=document.getElementById('r-b1');
+    if(t==='fanout'){b0.textContent='(all)';b1.textContent='(all)';}else{b0.textContent='order.*';b1.textContent='log.*';}}
+  document.getElementById('r-pub').onclick=publish;
+  typeSel.onchange=bindings;
+  document.getElementById('r-auto').onclick=function(){
+    if(autoTimer){clearInterval(autoTimer);autoTimer=null;this.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M5 3l14 9-14 9z"/></svg> auto';}
+    else{autoTimer=setInterval(publish,1100);this.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg> stop';publish();}
+  };
+  bindings();
+})();
+
+/* ---------- Simulation 2: competing consumers ---------- */
+(function(){
+  var stage=document.getElementById('c-stage');
+  var queue=document.getElementById('c-queue');
+  var box=document.getElementById('c-workers');
+  var depthEl=document.getElementById('c-depth');
+  var taskId=0,autoTimer=null;
+  var workers=[{n:'A',speed:1600,busy:false,done:0},{n:'B',speed:2600,busy:false,done:0},{n:'C',speed:4000,busy:false,done:0}];
+  workers.forEach(function(w,i){
+    var d=document.createElement('div');d.className='worker';
+    d.innerHTML='<div class="worker-head"><span>worker '+w.n+'</span><span style="color:var(--text-3)">'+(w.speed/1000).toFixed(1)+'s/task</span></div>'
+      +'<div class="state" id="c-state-'+i+'">idle</div><div class="bar"><div class="bar-fill" id="c-bar-'+i+'"></div></div>';
+    box.appendChild(d);
+  });
+  function rect(el){var r=el.getBoundingClientRect(),s=stage.getBoundingClientRect();return{x:r.left-s.left,y:r.top-s.top,w:r.width,h:r.height};}
+  function depth(){depthEl.textContent=queue.childElementCount;}
+  function publish(){
+    taskId++;var label='task '+taskId;
+    var f=document.createElement('div');f.className='flyer';f.textContent=label;f.style.background='var(--purple)';f.style.transition='left .85s ease,top .85s ease,opacity .5s';
+    stage.appendChild(f);
+    var pr=rect(document.getElementById('c-producer'));
+    f.style.left=(pr.x+pr.w/2-20)+'px';f.style.top=(pr.y+pr.h/2-12)+'px';f.style.opacity='0';
+    requestAnimationFrame(function(){f.style.opacity='1';
+      var ex=rect(document.getElementById('c-exchange'));
+      f.style.left=(ex.x+ex.w/2-20)+'px';f.style.top=(ex.y+ex.h/2-12)+'px';
+      setTimeout(function(){
+        var q=rect(queue);f.style.left=(q.x+q.w/2-20)+'px';f.style.top=(q.y+12)+'px';
+        setTimeout(function(){
+          if(f.parentNode)f.parentNode.removeChild(f);
+          var m=document.createElement('div');m.className='msg';m.style.background='var(--purple)';m.textContent=label;
+          queue.appendChild(m);depth();dispatch();
+        },900);
+      },900);
+    });
+  }
+  function dispatch(){
+    workers.forEach(function(w,i){
+      if(w.busy||!queue.firstChild)return;
+      var m=queue.firstChild,label=m.textContent;queue.removeChild(m);depth();w.busy=true;
+      var st=document.getElementById('c-state-'+i),bar=document.getElementById('c-bar-'+i);
+      st.style.background='var(--info-bg)';st.style.color='var(--info-tx)';st.textContent='processing '+label+'…';
+      bar.style.transition='none';bar.style.width='0%';
+      requestAnimationFrame(function(){bar.style.transition='width '+w.speed+'ms linear';bar.style.width='100%';});
+      setTimeout(function(){
+        st.style.background='var(--success-bg)';st.style.color='var(--success-tx)';st.textContent='✓ ack '+label;
+        w.done++;document.getElementById('c-w'+i).textContent=w.done;
+        setTimeout(function(){bar.style.transition='none';bar.style.width='0%';st.style.background='var(--surface-2)';st.style.color='var(--text-3)';st.textContent='idle';w.busy=false;dispatch();},900);
+      },w.speed);
+    });
+  }
+  document.getElementById('c-pub').onclick=publish;
+  document.getElementById('c-burst').onclick=function(){var n=0,iv=setInterval(function(){publish();if(++n>=5)clearInterval(iv);},350);};
+  document.getElementById('c-auto').onclick=function(){
+    if(autoTimer){clearInterval(autoTimer);autoTimer=null;this.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M5 3l14 9-14 9z"/></svg> auto';}
+    else{autoTimer=setInterval(publish,1900);this.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg> stop';publish();}
+  };
+})();
+
+/* ---------- Simulation 3: RabbitMQ vs Kafka ---------- */
+(function(){
+  var colors=['#534ab7','#1d9e75','#d85a30','#378add','#d4537e','#639922'];
+  var rabbit=document.getElementById('v-rabbit');
+  var kafka=document.getElementById('v-kafka');
+  var log=[],off1=0,off2=0,seq=0;
+  function render(){
+    rabbit.innerHTML='';
+    var queued=log.filter(function(m){return !m.acked;});
+    if(!queued.length)rabbit.innerHTML='<div class="vk-empty">queue is empty — all messages consumed and deleted</div>';
+    queued.forEach(function(m){
+      var d=document.createElement('div');d.className='vk-cell';d.style.background=m.color;
+      d.innerHTML='<span class="vk-idx">#'+m.id+'</span> '+m.label;rabbit.appendChild(d);
+    });
+    kafka.innerHTML='';
+    if(!log.length)kafka.innerHTML='<div class="vk-empty">log is empty</div>';
+    log.forEach(function(m,i){
+      var d=document.createElement('div');d.className='vk-cell';d.style.background=m.color;
+      var ptr='';
+      if(i===off1&&i===off2)ptr='<span class="vk-pointer" style="background:rgba(255,255,255,0.92);color:#222">C1·C2</span>';
+      else if(i===off1)ptr='<span class="vk-pointer" style="background:rgba(255,255,255,0.92);color:#0c447c">C1</span>';
+      else if(i===off2)ptr='<span class="vk-pointer" style="background:rgba(255,255,255,0.92);color:#3b6d11">C2</span>';
+      d.innerHTML='<span class="vk-idx">offset '+i+'</span> '+m.label+ptr;kafka.appendChild(d);
+    });
+    document.getElementById('v-o1').textContent=off1;
+    document.getElementById('v-o2').textContent=off2;
+  }
+  document.getElementById('v-pub').onclick=function(){
+    seq++;log.push({id:seq,label:'msg '+seq,color:colors[(seq-1)%colors.length],acked:false});
+    document.getElementById('v-rnote').textContent='Message msg '+seq+' entered the queue and the end of the log.';
+    document.getElementById('v-knote').textContent='';render();
+  };
+  document.getElementById('v-c1').onclick=function(){
+    var n=log.find(function(m){return !m.acked;});
+    if(n){n.acked=true;document.getElementById('v-rnote').textContent='RabbitMQ: a consumer read '+n.label+', sent ack — and the message was deleted for good.';}
+    else document.getElementById('v-rnote').textContent='RabbitMQ: nothing to read, the queue is empty.';
+    if(off1<log.length){document.getElementById('v-knote').textContent='Kafka: consumer 1 read offset '+off1+' and advanced its pointer. The message stayed in the log.';off1++;}
+    else document.getElementById('v-knote').textContent='Kafka: consumer 1 reached the end of the log.';
+    render();
+  };
+  document.getElementById('v-c2').onclick=function(){
+    document.getElementById('v-rnote').textContent='In RabbitMQ there is no "consumer 2" that can read the same message — once deleted, it is gone.';
+    if(off2<log.length){document.getElementById('v-knote').textContent='Kafka: consumer 2 read offset '+off2+' — fully independently of consumer 1. Same messages, separate pointer.';off2++;}
+    else document.getElementById('v-knote').textContent='Kafka: consumer 2 reached the end of the log.';
+    render();
+  };
+  document.getElementById('v-reset').onclick=function(){
+    log=[];off1=0;off2=0;seq=0;
+    document.getElementById('v-rnote').textContent='';document.getElementById('v-knote').textContent='';render();
+  };
+  render();
+})();
+</script>
+</body>
+</html>
