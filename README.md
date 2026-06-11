@@ -46,7 +46,7 @@ Queue architecture, Producer/Consumer Pattern, Exchanges, Queues & Bindings, Ack
 ### 📊 08 · Logging & Monitoring
 Centralized logging, structured logs, log levels, distributed tracing across services, alerting, and intro to observability tools such as the ELK Stack and Grafana.
 
-### 🗄️ 09 · Databases — SQL vs NoSQL + Indexes
+### 🗄️ 09 · Databases - SQL vs NoSQL + Indexes
 Relational model and ACID transactions, SQL index types (B-Tree, composite, covering), query planning with `EXPLAIN`, NoSQL categories (Document, Key-Value, Column, Graph), CAP theorem, eventual consistency, and a decision framework for choosing the right database per microservice.
 
 ### 🔄 10 · CI/CD
